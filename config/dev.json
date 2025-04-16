@@ -1,0 +1,58 @@
+{
+  "server": {
+    "port": "8080",
+    "environment": "dev",
+    "log_level": "debug",
+    "allow_origins": "*"
+  },
+  "redis": {
+    "host": "localhost",
+    "port": "6379",
+    "password": "",
+    "db": 0
+  },
+  "kafka": {
+    "brokers": ["localhost:9092"],
+    "group_id": "my-consumer-group",
+    "topics": ["topic1", "topic2", "topic3"],
+    "auto_offset_reset": "latest",
+    "session_timeout": "10s",
+    "heartbeat_interval": "3s",
+    "max_poll_interval": "5m",
+    "max_poll_records": 500,
+    "security": {
+      "enabled": false,
+      "username": "",
+      "password": "",
+      "ca_file": "",
+      "cert_file": "",
+      "key_file": "",
+      "skip_verify": false
+    }
+  },
+  "upload": {
+    "backend": "s3",
+    "s3": {
+      "region": "us-east-1",
+      "bucket": "your-bucket-name",
+      "access_key_id": "your-access-key",
+      "secret_access_key": "your-secret-key"
+    },
+    "minio": {
+      "endpoint": "localhost:9000",
+      "bucket": "your-bucket",
+      "access_key_id": "minioadmin",
+      "secret_access_key": "minioadmin",
+      "use_ssl": false
+    },
+    "gcs": {
+      "project_id": "your-project-id",
+      "bucket": "your-bucket",
+      "credentials_file": "path/to/credentials.json"
+    }
+  },
+  "features": {
+    "enable_redis": true,
+    "enable_kafka": true
+  }
+} 
