@@ -8,7 +8,7 @@ import (
 
 	"github.com/segmentio/kafka-go"
 	"github.com/goolanceman/go-microservice/internal/config"
-	"github.com/goolanceman/go-microservice/pkg/logger"
+	"go.uber.org/zap"
 )
 
 // MessageHandler defines the interface for processing Kafka messages
@@ -21,31 +21,33 @@ type Consumer struct {
 	reader  *kafka.Reader
 	config  *config.KafkaConfig
 	handler MessageHandler
+	logger  *zap.Logger
 	wg      sync.WaitGroup
 	done    chan struct{}
 }
 
 // NewConsumer creates a new Kafka consumer
-func NewConsumer(cfg *config.KafkaConfig, handler MessageHandler) (*Consumer, error) {
+func NewConsumer(cfg *config.KafkaConfig, handler MessageHandler, logger *zap.Logger, topic string) (*Consumer, error) {
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:     cfg.Brokers,
 		GroupID:     cfg.ConsumerGroup,
-		Topic:       cfg.ConsumerTopic,
+		Topic:       topic,
 		MinBytes:    10e3, // 10KB
 		MaxBytes:    10e6, // 10MB
 		StartOffset: kafka.FirstOffset,
 	})
 
 	logger.Info("Successfully created Kafka consumer",
-		logger.Strings("brokers", cfg.Brokers),
-		logger.String("topic", cfg.ConsumerTopic),
-		logger.String("group", cfg.ConsumerGroup),
+		zap.Strings("brokers", cfg.Brokers),
+		zap.String("topic", topic),
+		zap.String("group", cfg.ConsumerGroup),
 	)
 
 	return &Consumer{
 		reader:  reader,
 		config:  cfg,
 		handler: handler,
+		logger:  logger,
 		done:    make(chan struct{}),
 	}, nil
 }
@@ -61,7 +63,7 @@ func (c *Consumer) Stop() {
 	close(c.done)
 	c.wg.Wait()
 	if err := c.reader.Close(); err != nil {
-		logger.Error("Failed to close Kafka reader", logger.Error(err))
+		c.logger.Error("Failed to close Kafka reader", zap.Error(err))
 	}
 }
 
@@ -76,23 +78,23 @@ func (c *Consumer) consumeLoop(ctx context.Context) {
 		default:
 			msg, err := c.reader.ReadMessage(ctx)
 			if err != nil {
-				logger.Error("Failed to read message", logger.Error(err))
+				c.logger.Error("Failed to read message", zap.Error(err))
 				time.Sleep(time.Second) // Prevent tight loop on error
 				continue
 			}
 
 			if err := c.handler.HandleMessage(ctx, msg.Key, msg.Value); err != nil {
-				logger.Error("Failed to handle message",
-					logger.Error(err),
-					logger.String("key", string(msg.Key)),
+				c.logger.Error("Failed to handle message",
+					zap.Error(err),
+					zap.String("key", string(msg.Key)),
 				)
 				continue
 			}
 
-			logger.Debug("Successfully processed message",
-				logger.String("key", string(msg.Key)),
-				logger.Int("partition", msg.Partition),
-				logger.Int64("offset", msg.Offset),
+			c.logger.Debug("Successfully processed message",
+				zap.String("key", string(msg.Key)),
+				zap.Int("partition", msg.Partition),
+				zap.Int64("offset", msg.Offset),
 			)
 		}
 	}

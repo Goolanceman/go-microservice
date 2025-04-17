@@ -1,8 +1,6 @@
 package config
 
 import (
-	"time"
-
 	"github.com/spf13/viper"
 )
 
@@ -13,6 +11,7 @@ type Config struct {
 	Kafka    KafkaConfig    `mapstructure:"kafka"`
 	Upload   UploadConfig   `mapstructure:"upload"`
 	Features FeaturesConfig `mapstructure:"features"`
+	SFTP     SFTPConfig     `mapstructure:"sftp"`
 }
 
 // ServerConfig holds server-related configuration
@@ -20,6 +19,7 @@ type ServerConfig struct {
 	Port         string `mapstructure:"port"`
 	Environment  string `mapstructure:"environment"`
 	LogLevel     string `mapstructure:"log_level"`
+	LogFile      string `mapstructure:"log_file"`
 	AllowOrigins string `mapstructure:"allow_origins"`
 }
 
@@ -33,15 +33,10 @@ type RedisConfig struct {
 
 // KafkaConfig holds Kafka connection and consumer settings
 type KafkaConfig struct {
-	Brokers           []string       `mapstructure:"brokers"`
-	GroupID           string         `mapstructure:"group_id"`
-	Topics            []string       `mapstructure:"topics"`
-	AutoOffsetReset   string         `mapstructure:"auto_offset_reset"`
-	SessionTimeout    time.Duration  `mapstructure:"session_timeout"`
-	HeartbeatInterval time.Duration  `mapstructure:"heartbeat_interval"`
-	MaxPollInterval   time.Duration  `mapstructure:"max_poll_interval"`
-	MaxPollRecords    int            `mapstructure:"max_poll_records"`
-	Security          SecurityConfig `mapstructure:"security"`
+	Brokers       []string         `mapstructure:"brokers"`
+	ConsumerGroup string           `mapstructure:"consumer_group"`
+	Topics        map[string]string `mapstructure:"topics"`
+	Security      SecurityConfig    `mapstructure:"security"`
 }
 
 // SecurityConfig holds Kafka security settings
@@ -88,6 +83,15 @@ type GCSConfig struct {
 type FeaturesConfig struct {
 	EnableRedis bool `mapstructure:"enable_redis"`
 	EnableKafka bool `mapstructure:"enable_kafka"`
+}
+
+// SFTPConfig holds SFTP-specific configuration
+type SFTPConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	BaseDir  string `mapstructure:"base_dir"`
 }
 
 // LoadConfig loads configuration from file and environment variables

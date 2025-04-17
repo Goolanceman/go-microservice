@@ -7,17 +7,18 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/goolanceman/go-microservice/internal/config"
-	"github.com/goolanceman/go-microservice/pkg/logger"
+	"go.uber.org/zap"
 )
 
 // RedisClient wraps the Redis client with additional functionality
 type RedisClient struct {
 	client *redis.Client
 	config *config.RedisConfig
+	logger *zap.Logger
 }
 
 // NewRedisClient creates a new Redis client instance
-func NewRedisClient(cfg *config.RedisConfig) (*RedisClient, error) {
+func NewRedisClient(cfg *config.RedisConfig, logger *zap.Logger) (*RedisClient, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
 		Password: cfg.Password,
@@ -32,14 +33,15 @@ func NewRedisClient(cfg *config.RedisConfig) (*RedisClient, error) {
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
 	}
 
-	logger.Info("Successfully connected to Redis", 
-		logger.String("host", cfg.Host),
-		logger.String("port", cfg.Port),
+	logger.Info("Successfully connected to Redis",
+		zap.String("host", cfg.Host),
+		zap.String("port", cfg.Port),
 	)
 
 	return &RedisClient{
 		client: client,
 		config: cfg,
+		logger: logger,
 	}, nil
 }
 

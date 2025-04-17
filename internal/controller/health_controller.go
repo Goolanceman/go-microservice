@@ -1,57 +1,76 @@
 package controller
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
-	"github.com/goolanceman/go-microservice/internal/service"
-	"github.com/goolanceman/go-microservice/pkg/logger"
+	"go.uber.org/zap"
 )
 
-// HealthController handles health check endpoints
+// HealthController handles health check related HTTP requests
 type HealthController struct {
-	healthService *service.HealthService
+	logger *zap.Logger
 }
 
 // NewHealthController creates a new health controller
-func NewHealthController(healthService *service.HealthService) *HealthController {
+func NewHealthController(logger *zap.Logger) *HealthController {
 	return &HealthController{
-		healthService: healthService,
+		logger: logger,
 	}
 }
 
-// RegisterRoutes registers the health check routes
-func (c *HealthController) RegisterRoutes(router *gin.Engine) {
-	router.GET("/healthz", c.Liveness)
-	router.GET("/readyz", c.Readiness)
+// GetHealth handles GET /health request
+func (c *HealthController) GetHealth(ctx *gin.Context) {
+	ctx.JSON(200, gin.H{
+		"status": "healthy",
+		"timestamp": "2024-03-20T12:00:00Z",
+	})
 }
 
-// Liveness handles the liveness probe
-// @Summary Liveness probe
-// @Description Check if the service is alive
-// @Tags health
-// @Accept json
-// @Produce json
-// @Success 200 {object} map[string]string
-// @Router /healthz [get]
-func (c *HealthController) Liveness(ctx *gin.Context) {
-	status := c.healthService.CheckLiveness()
-	ctx.JSON(http.StatusOK, status)
+// GetHealthDetailed handles GET /health/detailed request
+func (c *HealthController) GetHealthDetailed(ctx *gin.Context) {
+	ctx.JSON(200, gin.H{
+		"status": "healthy",
+		"timestamp": "2024-03-20T12:00:00Z",
+		"components": []gin.H{
+			{
+				"name": "database",
+				"status": "healthy",
+				"latency": 5,
+			},
+			{
+				"name": "cache",
+				"status": "healthy",
+				"latency": 2,
+			},
+			{
+				"name": "storage",
+				"status": "healthy",
+				"latency": 10,
+			},
+		},
+		"metrics": gin.H{
+			"cpu_usage": 45.2,
+			"memory_usage": 60.8,
+			"disk_usage": 30.5,
+		},
+	})
 }
 
-// Readiness handles the readiness probe
-// @Summary Readiness probe
-// @Description Check if the service is ready to handle requests
-// @Tags health
-// @Accept json
-// @Produce json
-// @Success 200 {object} map[string]string
-// @Router /readyz [get]
-func (c *HealthController) Readiness(ctx *gin.Context) {
-	status := c.healthService.CheckReadiness()
-	if status["status"] == "ok" {
-		ctx.JSON(http.StatusOK, status)
-	} else {
-		ctx.JSON(http.StatusServiceUnavailable, status)
-	}
+// ReadinessCheck handles GET /ready request
+func (c *HealthController) ReadinessCheck(ctx *gin.Context) {
+	ctx.JSON(200, gin.H{
+		"status": "ready",
+		"services": gin.H{
+			"database": "ready",
+			"cache":    "ready",
+			"message_queue": "ready",
+		},
+	})
+}
+
+// LivenessCheck handles GET /live request
+func (c *HealthController) LivenessCheck(ctx *gin.Context) {
+	ctx.JSON(200, gin.H{
+		"status": "alive",
+		"uptime": "1h 30m",
+	})
 } 

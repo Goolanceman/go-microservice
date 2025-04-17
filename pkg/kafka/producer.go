@@ -7,20 +7,21 @@ import (
 
 	"github.com/segmentio/kafka-go"
 	"github.com/goolanceman/go-microservice/internal/config"
-	"github.com/goolanceman/go-microservice/pkg/logger"
+	"go.uber.org/zap"
 )
 
 // Producer handles Kafka message publishing
 type Producer struct {
 	writer *kafka.Writer
 	config *config.KafkaConfig
+	logger *zap.Logger
 }
 
 // NewProducer creates a new Kafka producer
-func NewProducer(cfg *config.KafkaConfig) (*Producer, error) {
+func NewProducer(cfg *config.KafkaConfig, logger *zap.Logger, topic string) (*Producer, error) {
 	writer := &kafka.Writer{
 		Addr:         kafka.TCP(cfg.Brokers...),
-		Topic:        cfg.ProducerTopic,
+		Topic:        topic,
 		Balancer:     &kafka.LeastBytes{},
 		BatchTimeout: 10 * time.Millisecond,
 		Async:        true,
@@ -38,13 +39,14 @@ func NewProducer(cfg *config.KafkaConfig) (*Producer, error) {
 	}
 
 	logger.Info("Successfully connected to Kafka producer",
-		logger.Strings("brokers", cfg.Brokers),
-		logger.String("topic", cfg.ProducerTopic),
+		zap.Strings("brokers", cfg.Brokers),
+		zap.String("topic", topic),
 	)
 
 	return &Producer{
 		writer: writer,
 		config: cfg,
+		logger: logger,
 	}, nil
 }
 

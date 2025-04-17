@@ -2,90 +2,93 @@ package logger
 
 import (
 	"context"
+	"sync"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-var globalLogger *zap.Logger
+var (
+	instance *zap.Logger
+	once     sync.Once
+)
 
-// Init initializes the global logger with the specified log level
-func Init(level string) error {
-	config := zap.NewProductionConfig()
-	
-	// Parse log level
-	var zapLevel zapcore.Level
-	if err := zapLevel.UnmarshalText([]byte(level)); err != nil {
-		zapLevel = zapcore.InfoLevel
-	}
-	config.Level = zap.NewAtomicLevelAt(zapLevel)
-	
-	// Customize production config
-	config.OutputPaths = []string{"stdout"}
-	config.EncoderConfig.TimeKey = "timestamp"
-	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+// Init initializes the global logger only once with level and file path
+func Init(level, filePath string) error {
+	var initErr error
+	once.Do(func() {
+		config := zap.NewProductionConfig()
 
-	var err error
-	globalLogger, err = config.Build()
-	if err != nil {
-		return err
-	}
+		var zapLevel zapcore.Level
+		if err := zapLevel.UnmarshalText([]byte(level)); err != nil {
+			zapLevel = zapcore.InfoLevel
+		}
+		config.Level = zap.NewAtomicLevelAt(zapLevel)
 
-	return nil
+		if filePath != "" {
+			config.OutputPaths = []string{filePath, "stdout"}
+		} else {
+			config.OutputPaths = []string{"stdout"}
+		}
+
+		config.EncoderConfig.TimeKey = "timestamp"
+		config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+
+		instance, initErr = config.Build()
+	})
+	return initErr
 }
 
-// WithContext creates a child logger with context fields
-func WithContext(ctx context.Context) *zap.Logger {
-	if globalLogger == nil {
+// FromContext returns a logger with context fields
+func FromContext(ctx context.Context) *zap.Logger {
+	if instance == nil {
 		return zap.NewNop()
 	}
-	
-	// Add request ID if present
 	if reqID, ok := ctx.Value("request_id").(string); ok {
-		return globalLogger.With(zap.String("request_id", reqID))
+		return instance.With(zap.String("request_id", reqID))
 	}
-	
-	return globalLogger
+	return instance
 }
 
-// Info logs a message at info level
+// Info logs an info level message
 func Info(msg string, fields ...zap.Field) {
-	if globalLogger != nil {
-		globalLogger.Info(msg, fields...)
+	if instance != nil {
+		instance.Info(msg, fields...)
 	}
 }
 
-// Error logs a message at error level
+// Error logs an error level message
 func Error(msg string, fields ...zap.Field) {
-	if globalLogger != nil {
-		globalLogger.Error(msg, fields...)
+	if instance != nil {
+		instance.Error(msg, fields...)
 	}
 }
 
-// Debug logs a message at debug level
+// Debug logs a debug level message
 func Debug(msg string, fields ...zap.Field) {
-	if globalLogger != nil {
-		globalLogger.Debug(msg, fields...)
+	if instance != nil {
+		instance.Debug(msg, fields...)
 	}
 }
 
-// Warn logs a message at warn level
+// Warn logs a warn level message
 func Warn(msg string, fields ...zap.Field) {
-	if globalLogger != nil {
-		globalLogger.Warn(msg, fields...)
+	if instance != nil {
+		instance.Warn(msg, fields...)
 	}
 }
 
-// Fatal logs a message at fatal level and then calls os.Exit(1)
+// Fatal logs a fatal level message
 func Fatal(msg string, fields ...zap.Field) {
-	if globalLogger != nil {
-		globalLogger.Fatal(msg, fields...)
+	if instance != nil {
+		instance.Fatal(msg, fields...)
 	}
 }
 
-// Sync flushes any buffered log entries
+// Sync flushes the logger
 func Sync() error {
-	if globalLogger != nil {
-		return globalLogger.Sync()
+	if instance != nil {
+		return instance.Sync()
 	}
 	return nil
-} 
+}

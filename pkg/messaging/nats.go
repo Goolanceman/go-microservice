@@ -6,18 +6,30 @@ import (
 	"sync"
 
 	"github.com/nats-io/nats.go"
-	"github.com/your-project/logger"
-	"github.com/your-project/models"
+	"github.com/goolanceman/go-microservice/pkg/logger"
 	"go.uber.org/zap"
 )
 
-type Handler func(ctx context.Context, message *Message) error
-
+// NATS implements the Messaging interface
 type NATS struct {
 	conn          *nats.Conn
 	subscriptions map[string]*nats.Subscription
 	mu            sync.RWMutex
 	logger        *logger.Logger
+}
+
+// NewNATS creates a new NATS client
+func NewNATS(url string, logger *logger.Logger) (*NATS, error) {
+	conn, err := nats.Connect(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to NATS: %w", err)
+	}
+
+	return &NATS{
+		conn:          conn,
+		subscriptions: make(map[string]*nats.Subscription),
+		logger:        logger,
+	}, nil
 }
 
 // SubscribeMultiple subscribes to multiple topics with the same handler
@@ -97,6 +109,23 @@ func (n *NATS) SubscribeMultiple(ctx context.Context, topics []string, handler H
 // Subscribe subscribes to a single topic
 func (n *NATS) Subscribe(ctx context.Context, topic string, handler Handler) error {
 	return n.SubscribeMultiple(ctx, []string{topic}, handler)
+}
+
+// Close closes the NATS connection and all subscriptions
+func (n *NATS) Close() error {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
+	// Unsubscribe from all topics
+	for _, sub := range n.subscriptions {
+		if err := sub.Unsubscribe(); err != nil {
+			n.logger.Error("Failed to unsubscribe", err)
+		}
+	}
+
+	// Close connection
+	n.conn.Close()
+	return nil
 }
 
 // ... existing code ... 
