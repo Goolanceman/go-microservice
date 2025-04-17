@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/nats-io/nats.go"
-	"github.com/goolanceman/go-microservice/pkg/logger"
+	"go-microservice/pkg/logger"
 	"go.uber.org/zap"
 )
 
@@ -15,11 +15,10 @@ type NATS struct {
 	conn          *nats.Conn
 	subscriptions map[string]*nats.Subscription
 	mu            sync.RWMutex
-	logger        *logger.Logger
 }
 
 // NewNATS creates a new NATS client
-func NewNATS(url string, logger *logger.Logger) (*NATS, error) {
+func NewNATS(url string) (*NATS, error) {
 	conn, err := nats.Connect(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to NATS: %w", err)
@@ -28,7 +27,6 @@ func NewNATS(url string, logger *logger.Logger) (*NATS, error) {
 	return &NATS{
 		conn:          conn,
 		subscriptions: make(map[string]*nats.Subscription),
-		logger:        logger,
 	}, nil
 }
 
@@ -71,7 +69,7 @@ func (n *NATS) SubscribeMultiple(ctx context.Context, topics []string, handler H
 
 				// Call handler
 				if err := handler(msgCtx, message); err != nil {
-					n.logger.Error("Error handling message",
+					logger.Error("Error handling message",
 						zap.String("topic", t),
 						zap.Error(err))
 				}
@@ -119,12 +117,21 @@ func (n *NATS) Close() error {
 	// Unsubscribe from all topics
 	for _, sub := range n.subscriptions {
 		if err := sub.Unsubscribe(); err != nil {
-			n.logger.Error("Failed to unsubscribe", err)
+			logger.Error("Failed to unsubscribe", zap.Error(err))
 		}
 	}
 
 	// Close connection
 	n.conn.Close()
+	return nil
+}
+
+func (n *NATS) Publish(ctx context.Context, msg *Message) error {
+	err := n.conn.Publish(msg.Topic, msg.Payload)
+	if err != nil {
+		logger.Error("Failed to publish message", zap.Error(err))
+		return fmt.Errorf("failed to publish message: %w", err)
+	}
 	return nil
 }
 

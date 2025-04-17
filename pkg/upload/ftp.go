@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/jlaffaye/ftp"
-	"github.com/goolanceman/go-microservice/internal/config"
+	"go-microservice/internal/config"
 )
 
 // FTPConfig holds FTP connection settings

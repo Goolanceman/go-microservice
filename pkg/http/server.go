@@ -9,15 +9,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/mansoor/go-microservice/internal/routes"
-	"github.com/mansoor/go-microservice/pkg/logger"
+	"go-microservice/internal/routes"
+	"go-microservice/internal/service"
+	"go-microservice/pkg/logger"
 )
 
 // Server represents the HTTP server
 type Server struct {
-	engine *gin.Engine
-	config *Config
-	logger *zap.Logger
+	engine  *gin.Engine
+	config  *Config
+	logger  *zap.Logger
+	service service.Service
 }
 
 // Config holds HTTP server configuration
@@ -40,7 +42,7 @@ func NewServer(cfg *Config) *Server {
 
 	// Add default middleware
 	engine.Use(gin.Recovery())
-	engine.Use(loggingMiddleware(logger))
+	engine.Use(loggingMiddleware())
 
 	// Add CORS middleware if origins are specified
 	if cfg.AllowOrigins != "" {
@@ -50,48 +52,13 @@ func NewServer(cfg *Config) *Server {
 	return &Server{
 		engine: engine,
 		config: cfg,
-		logger: logger,
 	}
 }
 
 // RegisterRoutes registers routes from the specified path
 func (s *Server) RegisterRoutes() error {
-	// Load route groups
-	routeGroups := routes.RegisterRoutes(s.logger)
-
-	// Register each route group
-	for _, group := range routeGroups {
-		// Create route group
-		routerGroup := s.engine.Group(group.Prefix)
-
-		// Add group-level middleware
-		for _, middleware := range group.Handlers {
-			routerGroup.Use(middleware)
-		}
-
-		// Register routes
-		for _, route := range group.Routes {
-			// Add route-level middleware
-			handlers := append(route.Middlewares, route.Handler)
-
-			// Register route based on method
-			switch route.Method {
-			case "GET":
-				routerGroup.GET(route.Path, handlers...)
-			case "POST":
-				routerGroup.POST(route.Path, handlers...)
-			case "PUT":
-				routerGroup.PUT(route.Path, handlers...)
-			case "DELETE":
-				routerGroup.DELETE(route.Path, handlers...)
-			case "PATCH":
-				routerGroup.PATCH(route.Path, handlers...)
-			default:
-				return fmt.Errorf("unsupported HTTP method: %s", route.Method)
-			}
-		}
-	}
-
+	// Register routes using the engine, logger, and service
+	routes.RegisterRoutes(s.engine)
 	return nil
 }
 
@@ -110,10 +77,10 @@ func (s *Server) Start(ctx context.Context) error {
 
 	// Start server in a goroutine
 	go func() {
-		s.logger.Info("Starting HTTP server",
+		logger.Info("Starting HTTP server",
 			zap.String("port", s.config.Port))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			s.logger.Fatal("Failed to start server",
+			logger.Fatal("Failed to start server",
 				zap.Error(err))
 		}
 	}()
@@ -122,7 +89,7 @@ func (s *Server) Start(ctx context.Context) error {
 	<-ctx.Done()
 
 	// Shutdown server
-	s.logger.Info("Shutting down server...")
+	logger.Info("Shutting down server...")
 	if err := srv.Shutdown(context.Background()); err != nil {
 		return fmt.Errorf("server forced to shutdown: %w", err)
 	}
@@ -131,7 +98,7 @@ func (s *Server) Start(ctx context.Context) error {
 }
 
 // loggingMiddleware adds logging to all requests
-func loggingMiddleware(logger *zap.Logger) gin.HandlerFunc {
+func loggingMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Start timer
 		start := time.Now()
@@ -165,4 +132,4 @@ func corsMiddleware(allowOrigins string) gin.HandlerFunc {
 
 		c.Next()
 	}
-} 
+}

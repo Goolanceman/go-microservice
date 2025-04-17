@@ -1,41 +1,39 @@
 package v1
 
 import (
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
-
-	"github.com/mansoor/go-microservice/internal/controller"
+	"go-microservice/internal/controller"
+	"go-microservice/internal/types"
 )
 
 // RegisterProductRoutes registers all product-related routes
-func RegisterProductRoutes(logger *zap.Logger) []Route {
-	productController := controller.NewProductController(logger, nil) // TODO: Pass actual service
+func RegisterProductRoutes() []types.Route {
+	productController := controller.NewProductController()
 
-	return []Route{
+	return []types.Route{
 		{
 			Method:  "GET",
 			Path:    "/products",
-			Handler: productController.handleGetProducts,
+			Handler: productController.GetProducts,
 		},
 		{
 			Method:  "POST",
 			Path:    "/products",
-			Handler: productController.handlePostProduct,
+			Handler: productController.CreateProduct,
 		},
 		{
 			Method:  "GET",
 			Path:    "/products/:id",
-			Handler: productController.handleGetProductByID,
+			Handler: productController.GetProduct,
 		},
 		{
 			Method:  "PUT",
 			Path:    "/products/:id",
-			Handler: productController.handlePutProduct,
+			Handler: productController.UpdateProduct,
 		},
 		{
 			Method:  "DELETE",
 			Path:    "/products/:id",
-			Handler: productController.handleDeleteProduct,
+			Handler: productController.DeleteProduct,
 		},
 	}
 }

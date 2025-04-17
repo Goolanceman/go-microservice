@@ -1,41 +1,44 @@
 package controller
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+
+	"go-microservice/internal/service"
 )
 
-// MetricsController handles metrics related HTTP requests
+// MetricsController handles metrics-related HTTP requests
 type MetricsController struct {
-	logger *zap.Logger
+	logger  *zap.Logger
+	service service.Service
 }
 
 // NewMetricsController creates a new metrics controller
-func NewMetricsController(logger *zap.Logger) *MetricsController {
+func NewMetricsController(logger *zap.Logger, svc service.Service) *MetricsController {
 	return &MetricsController{
-		logger: logger,
+		logger:  logger,
+		service: svc,
 	}
 }
 
 // GetMetrics handles GET /metrics request
 func (c *MetricsController) GetMetrics(ctx *gin.Context) {
-	ctx.JSON(200, gin.H{
-		"metrics": gin.H{
-			"requests": gin.H{
-				"total": 1000,
-				"successful": 980,
-				"failed": 20,
-				"rate": 50.5,
+	// TODO: Implement get metrics logic using service
+	ctx.JSON(http.StatusOK, gin.H{
+		"metrics": map[string]interface{}{
+			"requests": map[string]int{
+				"total":    1000,
+				"success":  950,
+				"failed":   50,
+				"pending":  0,
 			},
-			"latency": gin.H{
-				"p50": 100,
-				"p90": 200,
-				"p99": 500,
-			},
-			"system": gin.H{
-				"cpu_usage": 45.2,
-				"memory_usage": 60.8,
-				"disk_usage": 30.5,
+			"response_time": map[string]float64{
+				"avg":   150.5,
+				"p95":   200.0,
+				"p99":   300.0,
+				"max":   500.0,
 			},
 		},
 	})
@@ -75,34 +78,15 @@ func (c *MetricsController) GetMetricsDetailed(ctx *gin.Context) {
 // GetMetricsByType handles GET /metrics/:type request
 func (c *MetricsController) GetMetricsByType(ctx *gin.Context) {
 	metricType := ctx.Param("type")
-	
-	// Example metrics by type
-	metrics := map[string]gin.H{
-		"requests": {
-			"total": 1000,
-			"success": 950,
-			"error": 50,
+	// TODO: Implement get metrics by type logic using service
+	ctx.JSON(http.StatusOK, gin.H{
+		"type": metricType,
+		"data": map[string]interface{}{
+			"value":    100,
+			"unit":     "count",
+			"trend":    "up",
+			"change":   "+5%",
+			"interval": "1h",
 		},
-		"response_time": {
-			"avg": 150,
-			"p95": 200,
-			"p99": 300,
-		},
-		"system": {
-			"cpu_usage": 45.5,
-			"memory_usage": 60.2,
-			"disk_usage": 30.8,
-		},
-	}
-
-	if data, exists := metrics[metricType]; exists {
-		ctx.JSON(200, gin.H{
-			"type": metricType,
-			"data": data,
-		})
-	} else {
-		ctx.JSON(404, gin.H{
-			"error": "Metric type not found",
-		})
-	}
+	})
 } 

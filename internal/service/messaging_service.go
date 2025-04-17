@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/goolanceman/go-microservice/internal/config"
-	"github.com/goolanceman/go-microservice/pkg/messaging"
+	"go-microservice/internal/config"
+	"go-microservice/pkg/messaging"
 	"go.uber.org/zap"
 )
 

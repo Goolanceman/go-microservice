@@ -1,40 +1,40 @@
 package controller
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 // TaskController handles task-related HTTP requests
-type TaskController struct {
-	logger *zap.Logger
-}
+type TaskController struct {}
 
 // NewTaskController creates a new task controller
-func NewTaskController(logger *zap.Logger) *TaskController {
-	return &TaskController{
-		logger: logger,
-	}
+func NewTaskController() *TaskController {
+	return &TaskController{}
 }
 
 // GetTasks handles GET /tasks request
 func (c *TaskController) GetTasks(ctx *gin.Context) {
-	ctx.JSON(200, gin.H{
+	// TODO: Implement get tasks logic using service
+	ctx.JSON(http.StatusOK, gin.H{
 		"tasks": []string{"task1", "task2"},
 	})
 }
 
 // CreateTask handles POST /tasks request
 func (c *TaskController) CreateTask(ctx *gin.Context) {
-	ctx.JSON(201, gin.H{
+	// TODO: Implement create task logic using service
+	ctx.JSON(http.StatusCreated, gin.H{
 		"message": "Task created successfully",
 	})
 }
 
-// GetTaskByID handles GET /tasks/:id request
-func (c *TaskController) GetTaskByID(ctx *gin.Context) {
+// GetTask handles GET /tasks/:id request
+func (c *TaskController) GetTask(ctx *gin.Context) {
 	id := ctx.Param("id")
-	ctx.JSON(200, gin.H{
+	// TODO: Implement get task logic using service
+	ctx.JSON(http.StatusOK, gin.H{
 		"id":          id,
 		"title":       "Sample Task",
 		"description": "This is a sample task",
@@ -45,7 +45,8 @@ func (c *TaskController) GetTaskByID(ctx *gin.Context) {
 // UpdateTask handles PUT /tasks/:id request
 func (c *TaskController) UpdateTask(ctx *gin.Context) {
 	id := ctx.Param("id")
-	ctx.JSON(200, gin.H{
+	// TODO: Implement update task logic using service
+	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Task updated successfully",
 		"id":      id,
 	})
@@ -54,7 +55,8 @@ func (c *TaskController) UpdateTask(ctx *gin.Context) {
 // DeleteTask handles DELETE /tasks/:id request
 func (c *TaskController) DeleteTask(ctx *gin.Context) {
 	id := ctx.Param("id")
-	ctx.JSON(200, gin.H{
+	// TODO: Implement delete task logic using service
+	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Task deleted successfully",
 		"id":      id,
 	})

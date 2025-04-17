@@ -1,51 +1,62 @@
 package controller
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+
+	"go-microservice/internal/service"
 )
 
 // NotificationController handles notification-related HTTP requests
 type NotificationController struct {
-	logger *zap.Logger
+	logger  *zap.Logger
+	service service.Service
 }
 
 // NewNotificationController creates a new notification controller
-func NewNotificationController(logger *zap.Logger) *NotificationController {
+func NewNotificationController(logger *zap.Logger, svc service.Service) *NotificationController {
 	return &NotificationController{
-		logger: logger,
+		logger:  logger,
+		service: svc,
 	}
 }
 
 // GetNotifications handles GET /notifications request
 func (c *NotificationController) GetNotifications(ctx *gin.Context) {
-	ctx.JSON(200, gin.H{
+	// TODO: Implement get notifications logic using service
+	ctx.JSON(http.StatusOK, gin.H{
 		"notifications": []string{"notification1", "notification2"},
 	})
 }
 
 // CreateNotification handles POST /notifications request
 func (c *NotificationController) CreateNotification(ctx *gin.Context) {
-	ctx.JSON(201, gin.H{
+	// TODO: Implement create notification logic using service
+	ctx.JSON(http.StatusCreated, gin.H{
 		"message": "Notification created successfully",
 	})
 }
 
-// GetNotificationByID handles GET /notifications/:id request
-func (c *NotificationController) GetNotificationByID(ctx *gin.Context) {
+// GetNotification handles GET /notifications/:id request
+func (c *NotificationController) GetNotification(ctx *gin.Context) {
 	id := ctx.Param("id")
-	ctx.JSON(200, gin.H{
-		"id":      id,
-		"type":    "email",
-		"content": "Your order has been shipped",
-		"status":  "sent",
+	// TODO: Implement get notification logic using service
+	ctx.JSON(http.StatusOK, gin.H{
+		"id":          id,
+		"title":       "Sample Notification",
+		"message":     "This is a sample notification",
+		"type":        "info",
+		"status":      "unread",
 	})
 }
 
 // UpdateNotification handles PUT /notifications/:id request
 func (c *NotificationController) UpdateNotification(ctx *gin.Context) {
 	id := ctx.Param("id")
-	ctx.JSON(200, gin.H{
+	// TODO: Implement update notification logic using service
+	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Notification updated successfully",
 		"id":      id,
 	})
@@ -54,7 +65,8 @@ func (c *NotificationController) UpdateNotification(ctx *gin.Context) {
 // DeleteNotification handles DELETE /notifications/:id request
 func (c *NotificationController) DeleteNotification(ctx *gin.Context) {
 	id := ctx.Param("id")
-	ctx.JSON(200, gin.H{
+	// TODO: Implement delete notification logic using service
+	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Notification deleted successfully",
 		"id":      id,
 	})

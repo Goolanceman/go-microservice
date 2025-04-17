@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/segmentio/kafka-go"
-	"github.com/goolanceman/go-microservice/internal/config"
+	"go-microservice/internal/config"
 	"go.uber.org/zap"
 )
 

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
-	"github.com/goolanceman/go-microservice/internal/config"
+	"go-microservice/internal/config"
 	"google.golang.org/api/option"
 )
 

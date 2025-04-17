@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/goolanceman/go-microservice/internal/config"
+	"go-microservice/internal/config"
 )
 
 // LocalConfig holds local storage settings

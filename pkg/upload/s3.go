@@ -7,7 +7,7 @@ import (
 	"path"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/goolanceman/go-microservice/internal/config"
+	"go-microservice/internal/config"
 )
 
 // S3Uploader implements the Uploader interface for AWS S3

@@ -7,9 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/goolanceman/go-microservice/pkg/http"
-	"github.com/goolanceman/go-microservice/internal/config"
-	"github.com/goolanceman/go-microservice/pkg/logger"
+	"go-microservice/internal/config"
+	"go-microservice/pkg/http"
+	"go-microservice/pkg/logger"
+
 	"go.uber.org/zap"
 )
 
@@ -19,7 +20,7 @@ func main() {
 	if env == "" {
 		env = "dev"
 	}
-	
+
 	// Load config file based on env
 	cfg, err := config.LoadConfig("config/" + env + ".json")
 	if err != nil {
@@ -33,14 +34,12 @@ func main() {
 	defer logger.Sync()
 
 	// Create HTTP server
-	server := http.NewServer(cfg.Server)
-
-	// Start server in a goroutine
-	go func() {
-		if err := server.Start(); err != nil {
-			logger.Fatal().Err(err).Msg("Failed to start server")
-		}
-	}()
+	httpConfig := &http.Config{
+		Port:         cfg.Server.Port,
+		Environment:  cfg.Server.Environment,
+		AllowOrigins: cfg.Server.AllowOrigins,
+	}
+	server := http.NewServer(httpConfig)
 
 	// Create context for graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
@@ -50,13 +49,15 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Start server
-	if err := server.Start(ctx); err != nil {
-		logger.Fatal("Failed to start server", zap.Error(err))
-	}
+	// Start server in a goroutine
+	go func() {
+		if err := server.Start(ctx); err != nil {
+			logger.Fatal("Failed to start server", zap.Error(err))
+		}
+	}()
 
 	// Wait for interrupt signal
 	<-sigChan
 	logger.Info("Shutting down gracefully...")
 	cancel()
-} 
+}

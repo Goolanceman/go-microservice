@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/gin-gonic/gin"
-	"github.com/goolanceman/go-microservice/internal/service"
+	"go-microservice/internal/service"
 	"go.uber.org/zap"
 )
 

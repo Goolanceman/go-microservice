@@ -2,11 +2,13 @@ package controller
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/mansoor/go-microservice/internal/service"
+	"go-microservice/internal/models"
+	"go-microservice/internal/service"
 )
 
 // FileController handles file-related HTTP requests
@@ -34,7 +36,7 @@ func (c *FileController) UploadFile(ctx *gin.Context) {
 	// Open the uploaded file
 	src, err := file.Open()
 	if err != nil {
-		c.logger.Error("Failed to open uploaded file", "error", err)
+		c.logger.Error("Failed to open uploaded file", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process file"})
 		return
 	}
@@ -43,43 +45,64 @@ func (c *FileController) UploadFile(ctx *gin.Context) {
 	// Read file content
 	content := make([]byte, file.Size)
 	if _, err := src.Read(content); err != nil {
-		c.logger.Error("Failed to read file content", "error", err)
+		c.logger.Error("Failed to read file content", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read file"})
 		return
 	}
 
-	// Upload file
-	url, err := c.service.UploadFile(ctx, file.Filename, content)
-	if err != nil {
-		c.logger.Error("Failed to upload file", "error", err)
+	// Create file model
+	fileModel := &models.File{
+		Name:        file.Filename,
+		Size:        file.Size,
+		ContentType: file.Header.Get("Content-Type"),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	// Upload file using service
+	if err := c.service.UploadFile(ctx, fileModel); err != nil {
+		c.logger.Error("Failed to upload file", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file"})
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"url": url})
+	ctx.JSON(http.StatusCreated, gin.H{
+		"message": "File uploaded successfully",
+		"file":    fileModel,
+	})
 }
 
 // DownloadFile handles GET /files/:id request
 func (c *FileController) DownloadFile(ctx *gin.Context) {
 	id := ctx.Param("id")
-	content, err := c.service.DownloadFile(ctx, id)
+	if id == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "File ID is required"})
+		return
+	}
+
+	file, err := c.service.DownloadFile(ctx, id)
 	if err != nil {
-		c.logger.Error("Failed to download file", "error", err)
+		c.logger.Error("Failed to download file", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to download file"})
 		return
 	}
 
-	ctx.Data(http.StatusOK, "application/octet-stream", content)
+	ctx.JSON(http.StatusOK, file)
 }
 
 // DeleteFile handles DELETE /files/:id request
 func (c *FileController) DeleteFile(ctx *gin.Context) {
 	id := ctx.Param("id")
+	if id == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "File ID is required"})
+		return
+	}
+
 	if err := c.service.DeleteFile(ctx, id); err != nil {
-		c.logger.Error("Failed to delete file", "error", err)
+		c.logger.Error("Failed to delete file", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete file"})
 		return
 	}
 
-	ctx.Status(http.StatusNoContent)
+	ctx.JSON(http.StatusOK, gin.H{"message": "File deleted successfully"})
 } 

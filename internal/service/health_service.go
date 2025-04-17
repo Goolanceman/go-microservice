@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/goolanceman/go-microservice/internal/config"
-	"github.com/goolanceman/go-microservice/pkg/database"
-	"github.com/goolanceman/go-microservice/pkg/kafka"
+	"go-microservice/internal/config"
+	"go-microservice/pkg/database"
+	"go-microservice/pkg/kafka"
 )
 
 // HealthService handles health checks for the service

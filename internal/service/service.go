@@ -2,20 +2,20 @@ package service
 
 import (
 	"context"
-	"github.com/goolanceman/go-microservice/internal/model"
+	"go-microservice/internal/models"
 )
 
 // Service defines the interface for business logic operations
 type Service interface {
 	// User operations
-	CreateUser(ctx context.Context, user *model.User) error
-	GetUser(ctx context.Context, id string) (*model.User, error)
-	UpdateUser(ctx context.Context, user *model.User) error
+	CreateUser(ctx context.Context, user *models.User) error
+	GetUser(ctx context.Context, id string) (*models.User, error)
+	UpdateUser(ctx context.Context, user *models.User) error
 	DeleteUser(ctx context.Context, id string) error
 
 	// File operations
-	UploadFile(ctx context.Context, file *model.File) error
-	DownloadFile(ctx context.Context, id string) (*model.File, error)
+	UploadFile(ctx context.Context, file *models.File) error
+	DownloadFile(ctx context.Context, id string) (*models.File, error)
 	DeleteFile(ctx context.Context, id string) error
 }
 
@@ -30,17 +30,17 @@ func NewService() Service {
 }
 
 // Implement the Service interface methods
-func (s *service) CreateUser(ctx context.Context, user *model.User) error {
+func (s *service) CreateUser(ctx context.Context, user *models.User) error {
 	// TODO: Implement user creation logic
 	return nil
 }
 
-func (s *service) GetUser(ctx context.Context, id string) (*model.User, error) {
+func (s *service) GetUser(ctx context.Context, id string) (*models.User, error) {
 	// TODO: Implement user retrieval logic
 	return nil, nil
 }
 
-func (s *service) UpdateUser(ctx context.Context, user *model.User) error {
+func (s *service) UpdateUser(ctx context.Context, user *models.User) error {
 	// TODO: Implement user update logic
 	return nil
 }
@@ -50,12 +50,12 @@ func (s *service) DeleteUser(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *service) UploadFile(ctx context.Context, file *model.File) error {
+func (s *service) UploadFile(ctx context.Context, file *models.File) error {
 	// TODO: Implement file upload logic
 	return nil
 }
 
-func (s *service) DownloadFile(ctx context.Context, id string) (*model.File, error) {
+func (s *service) DownloadFile(ctx context.Context, id string) (*models.File, error) {
 	// TODO: Implement file download logic
 	return nil, nil
 }

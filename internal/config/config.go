@@ -33,8 +33,8 @@ type RedisConfig struct {
 
 // KafkaConfig holds Kafka connection and consumer settings
 type KafkaConfig struct {
-	Brokers       []string         `mapstructure:"brokers"`
-	ConsumerGroup string           `mapstructure:"consumer_group"`
+	Brokers       []string          `mapstructure:"brokers"`
+	ConsumerGroup string            `mapstructure:"consumer_group"`
 	Topics        map[string]string `mapstructure:"topics"`
 	Security      SecurityConfig    `mapstructure:"security"`
 }
@@ -52,10 +52,10 @@ type SecurityConfig struct {
 
 // UploadConfig holds upload service configuration
 type UploadConfig struct {
-	Backend    string      `mapstructure:"backend"` // "s3", "minio", or "gcs"
-	S3Config   S3Config      `mapstructure:"s3"`
-	MinioConfig MinioConfig   `mapstructure:"minio"`
-	GCSConfig  GCSConfig     `mapstructure:"gcs"`
+	Backend     string      `mapstructure:"backend"` // "s3", "minio", or "gcs"
+	S3Config    S3Config    `mapstructure:"s3"`
+	MinioConfig MinioConfig `mapstructure:"minio"`
+	GCSConfig   GCSConfig   `mapstructure:"gcs"`
 }
 
 type S3Config struct {
@@ -74,8 +74,8 @@ type MinioConfig struct {
 }
 
 type GCSConfig struct {
-	ProjectID      string `mapstructure:"project_id"`
-	Bucket         string `mapstructure:"bucket"`
+	ProjectID       string `mapstructure:"project_id"`
+	Bucket          string `mapstructure:"bucket"`
 	CredentialsFile string `mapstructure:"credentials_file"`
 }
 
@@ -109,4 +109,4 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 
 	return &config, nil
-} 
+}

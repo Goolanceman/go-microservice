@@ -10,7 +10,7 @@ import (
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
-	"github.com/goolanceman/go-microservice/internal/config"
+	"go-microservice/internal/config"
 )
 
 // SFTPConfig holds SFTP connection settings

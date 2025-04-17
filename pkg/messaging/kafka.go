@@ -6,8 +6,9 @@ import (
 	"sync"
 
 	"github.com/IBM/sarama"
-	"github.com/goolanceman/go-microservice/internal/config"
-	"github.com/goolanceman/go-microservice/pkg/logger"
+	"go-microservice/internal/config"
+	"go-microservice/pkg/logger"
+	"go.uber.org/zap"
 )
 
 // Kafka implements the Messaging interface
@@ -15,11 +16,10 @@ type Kafka struct {
 	producer sarama.SyncProducer
 	consumer sarama.ConsumerGroup
 	mu       sync.Mutex
-	logger   *logger.Logger
 }
 
 // NewKafka creates a new Kafka client
-func NewKafka(cfg *config.Config, logger *logger.Logger) (*Kafka, error) {
+func NewKafka(cfg *config.Config) (*Kafka, error) {
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll
 	config.Producer.Retry.Max = 5
@@ -43,7 +43,6 @@ func NewKafka(cfg *config.Config, logger *logger.Logger) (*Kafka, error) {
 	return &Kafka{
 		producer: producer,
 		consumer: group,
-		logger:   logger,
 	}, nil
 }
 
@@ -77,13 +76,14 @@ func (k *Kafka) Publish(ctx context.Context, msg *Message) error {
 	// Send message
 	partition, offset, err := k.producer.SendMessage(kafkaMsg)
 	if err != nil {
+		logger.Error("Failed to send message", zap.Error(err))
 		return fmt.Errorf("failed to send message: %w", err)
 	}
 
-	k.logger.Debug("Message published successfully",
-		"topic", msg.Topic,
-		"partition", partition,
-		"offset", offset)
+	logger.Debug("Message published successfully",
+		zap.String("topic", msg.Topic),
+		zap.Int32("partition", partition),
+		zap.Int64("offset", offset))
 
 	return nil
 }
@@ -100,7 +100,6 @@ func (k *Kafka) SubscribeMultiple(ctx context.Context, topics []string, handler 
 	// Create consumer group handler
 	h := &consumerGroupHandler{
 		handler: handler,
-		logger:  k.logger,
 	}
 
 	// Start consuming in a goroutine
@@ -111,7 +110,7 @@ func (k *Kafka) SubscribeMultiple(ctx context.Context, topics []string, handler 
 				return
 			default:
 				if err := k.consumer.Consume(ctx, topics, h); err != nil {
-					k.logger.Error("Error from consumer", err)
+					logger.Error("Error from consumer", zap.Error(err))
 				}
 			}
 		}
@@ -154,35 +153,47 @@ func (k *Kafka) Close() error {
 // consumerGroupHandler implements sarama.ConsumerGroupHandler
 type consumerGroupHandler struct {
 	handler Handler
-	logger  *logger.Logger
 }
 
 func (h *consumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error   { return nil }
 func (h *consumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
 
 func (h *consumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	for msg := range claim.Messages() {
-		message := &Message{
-			Topic:   msg.Topic,
-			Payload: msg.Value,
-			Headers: make(map[string]string),
-		}
+	for {
+		select {
+		case msg := <-claim.Messages():
+			if msg == nil {
+				return nil
+			}
 
-		// Copy headers
-		for _, header := range msg.Headers {
-			message.Headers[string(header.Key)] = string(header.Value)
-		}
+			logger.Debug("Received message",
+				zap.String("topic", msg.Topic),
+				zap.Int32("partition", msg.Partition),
+				zap.Int64("offset", msg.Offset))
 
-		// Call handler
-		if err := h.handler(session.Context(), message); err != nil {
-			h.logger.Error("Failed to handle message",
-				"topic", msg.Topic,
-				"error", err)
-			continue
-		}
+			message := &Message{
+				Topic:   msg.Topic,
+				Payload: msg.Value,
+				Headers: make(map[string]string),
+			}
 
-		// Mark message as processed
-		session.MarkMessage(msg, "")
+			// Copy headers
+			for _, header := range msg.Headers {
+				message.Headers[string(header.Key)] = string(header.Value)
+			}
+
+			// Call handler
+			if err := h.handler(session.Context(), message); err != nil {
+				logger.Error("Failed to handle message",
+					zap.String("topic", msg.Topic),
+					zap.Error(err))
+				continue
+			}
+
+			// Mark message as processed
+			session.MarkMessage(msg, "")
+		case <-session.Context().Done():
+			return nil
+		}
 	}
-	return nil
 } 

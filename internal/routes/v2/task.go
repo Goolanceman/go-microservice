@@ -1,40 +1,38 @@
 package v2
 
 import (
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
-
-	"github.com/mansoor/go-microservice/internal/controller"
+	"go-microservice/internal/controller"
+	"go-microservice/internal/types"
 )
 
 // RegisterTaskRoutes registers all task-related routes
-func RegisterTaskRoutes(logger *zap.Logger) []Route {
-	taskController := controller.NewTaskController(logger, nil) // TODO: Pass actual service
-	return []Route{
+func RegisterTaskRoutes() []types.Route {
+	taskController := controller.NewTaskController()
+	return []types.Route{
 		{
 			Method:  "GET",
 			Path:    "/tasks",
-			Handler: taskController.handleGetTasks,
+			Handler: taskController.GetTasks,
 		},
 		{
 			Method:  "POST",
 			Path:    "/tasks",
-			Handler: taskController.handlePostTask,
+			Handler: taskController.CreateTask,
 		},
 		{
 			Method:  "GET",
 			Path:    "/tasks/:id",
-			Handler: taskController.handleGetTaskByID,
+			Handler: taskController.GetTask,
 		},
 		{
 			Method:  "PUT",
 			Path:    "/tasks/:id",
-			Handler: taskController.handlePutTask,
+			Handler: taskController.UpdateTask,
 		},
 		{
 			Method:  "DELETE",
 			Path:    "/tasks/:id",
-			Handler: taskController.handleDeleteTask,
+			Handler: taskController.DeleteTask,
 		},
 	}
 }

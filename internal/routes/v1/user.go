@@ -1,41 +1,39 @@
 package v1
 
 import (
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
-
-	"github.com/mansoor/go-microservice/internal/controller"
+	"go-microservice/internal/controller"
+	"go-microservice/internal/types"
 )
 
 // RegisterUserRoutes registers all user-related routes
-func RegisterUserRoutes(logger *zap.Logger) []Route {
-	userController := controller.NewUserController(logger, nil) // TODO: Pass actual service
-	
-	return []Route{
+func RegisterUserRoutes() []types.Route {
+	userController := controller.NewUserController()
+
+	return []types.Route{
 		{
 			Method:  "GET",
 			Path:    "/users",
-			Handler: userController.handleGetUsers,
+			Handler: userController.GetUsers,
 		},
 		{
 			Method:  "POST",
 			Path:    "/users",
-			Handler: userController.handlePostUsers,
+			Handler: userController.CreateUser,
 		},
 		{
 			Method:  "GET",
 			Path:    "/users/:id",
-			Handler: userController.handleGetUserByID,
+			Handler: userController.GetUser,
 		},
 		{
 			Method:  "PUT",
 			Path:    "/users/:id",
-			Handler: userController.handlePutUser,
+			Handler: userController.UpdateUser,
 		},
 		{
 			Method:  "DELETE",
 			Path:    "/users/:id",
-			Handler: userController.handleDeleteUser,
+			Handler: userController.DeleteUser,
 		},
 	}
 }

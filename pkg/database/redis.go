@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/goolanceman/go-microservice/internal/config"
+	"go-microservice/internal/config"
 	"go.uber.org/zap"
 )
 
