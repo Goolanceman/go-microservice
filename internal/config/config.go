@@ -1,7 +1,14 @@
 package config
 
 import (
+	"sync"
+
 	"github.com/spf13/viper"
+)
+
+var (
+	cfg  *Config
+	once sync.Once
 )
 
 // Config holds all configuration for the application
@@ -94,19 +101,31 @@ type SFTPConfig struct {
 	BaseDir  string `mapstructure:"base_dir"`
 }
 
-// LoadConfig loads configuration from file and environment variables
+// LoadConfig loads configuration from file and environment variables, singleton style.
 func LoadConfig(configPath string) (*Config, error) {
-	viper.SetConfigFile(configPath)
-	viper.AutomaticEnv()
+	var err error
 
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, err
-	}
+	once.Do(func() {
+		viper.SetConfigFile(configPath)
+		viper.AutomaticEnv()
 
-	var config Config
-	if err := viper.Unmarshal(&config); err != nil {
-		return nil, err
-	}
+		if e := viper.ReadInConfig(); e != nil {
+			err = e
+			return
+		}
 
-	return &config, nil
+		var loaded Config
+		if e := viper.Unmarshal(&loaded); e != nil {
+			err = e
+			return
+		}
+
+		cfg = &loaded
+	})
+
+	return cfg, err
+}
+
+func GetConfig() *Config {
+	return cfg
 }

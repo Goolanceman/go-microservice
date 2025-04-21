@@ -7,8 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"go-microservice/internal/config"
 )
 
 // LocalConfig holds local storage settings
@@ -47,9 +45,8 @@ func NewLocalUploader(cfg interface{}) (Uploader, error) {
 }
 
 // Upload implements the Uploader interface
-func (u *LocalUploader) Upload(ctx context.Context, filepath string, content io.Reader, contentType string) (string, error) {
-	// Create full path
-	fullPath := filepath.Join(u.config.BaseDir, filepath)
+func (u *LocalUploader) Upload(ctx context.Context, relativePath string, content io.Reader, contentType string) (string, error) {
+	fullPath := filepath.Join(u.config.BaseDir, relativePath)
 
 	// Create directories if needed
 	if u.config.CreateDirs {
@@ -72,12 +69,12 @@ func (u *LocalUploader) Upload(ctx context.Context, filepath string, content io.
 	}
 
 	// Return URL
-	return u.GetURL(ctx, filepath)
+	return u.GetURL(ctx, relativePath)
 }
 
 // Download implements the Uploader interface
-func (u *LocalUploader) Download(ctx context.Context, filepath string) (io.ReadCloser, error) {
-	fullPath := filepath.Join(u.config.BaseDir, filepath)
+func (u *LocalUploader) Download(ctx context.Context, relativePath string) (io.ReadCloser, error) {
+	fullPath := filepath.Join(u.config.BaseDir, relativePath)
 	file, err := os.Open(fullPath)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrDownloadFailed, err)
@@ -86,8 +83,8 @@ func (u *LocalUploader) Download(ctx context.Context, filepath string) (io.ReadC
 }
 
 // Delete implements the Uploader interface
-func (u *LocalUploader) Delete(ctx context.Context, filepath string) error {
-	fullPath := filepath.Join(u.config.BaseDir, filepath)
+func (u *LocalUploader) Delete(ctx context.Context, relativePath string) error {
+	fullPath := filepath.Join(u.config.BaseDir, relativePath)
 	if err := os.Remove(fullPath); err != nil {
 		return fmt.Errorf("%w: %v", ErrDeleteFailed, err)
 	}
@@ -95,21 +92,22 @@ func (u *LocalUploader) Delete(ctx context.Context, filepath string) error {
 }
 
 // GetURL implements the Uploader interface
-func (u *LocalUploader) GetURL(ctx context.Context, filepath string) (string, error) {
+func (u *LocalUploader) GetURL(ctx context.Context, relativePath string) (string, error) {
 	if u.config.BaseURL == "" {
 		return "", fmt.Errorf("base URL not configured")
 	}
 
-	// Ensure base URL ends with a slash
 	baseURL := u.config.BaseURL
 	if !strings.HasSuffix(baseURL, "/") {
 		baseURL += "/"
 	}
 
-	return baseURL + filepath, nil
+	// Normalize slashes for URLs
+	urlPath := strings.ReplaceAll(relativePath, string(os.PathSeparator), "/")
+	return baseURL + urlPath, nil
 }
 
 // Close implements the Uploader interface
 func (u *LocalUploader) Close() error {
 	return nil // No cleanup needed for local storage
-} 
+}

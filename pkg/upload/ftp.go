@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/jlaffaye/ftp"
-	"go-microservice/internal/config"
 )
 
 // FTPConfig holds FTP connection settings
@@ -112,4 +111,4 @@ func (u *FTPUploader) GetURL(ctx context.Context, filepath string) (string, erro
 // Close closes the FTP connection
 func (u *FTPUploader) Close() error {
 	return u.client.Quit()
-} 
+}

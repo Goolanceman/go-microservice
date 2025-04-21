@@ -1,12 +1,16 @@
-.PHONY: build run test clean docker-build docker-run swagger
+.PHONY: build run test clean docker-build docker-run swagger dev air
 
 # Build the application
 build:
 	go build -o bin/api ./cmd/api
 
-# Run the application
+# Run the application (manual mode)
 run:
 	go run ./cmd/api
+
+# Run the application with Air (hot reload)
+air:
+	air
 
 # Run tests
 test:
@@ -46,4 +50,4 @@ lint:
 	golangci-lint run
 
 # All-in-one development setup
-dev: deps fmt vet lint test build 
+dev: deps fmt vet lint test build

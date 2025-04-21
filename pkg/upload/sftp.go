@@ -10,7 +10,6 @@ import (
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
-	"go-microservice/internal/config"
 )
 
 // SFTPConfig holds SFTP connection settings
@@ -147,4 +146,4 @@ func (u *SFTPUploader) GetURL(ctx context.Context, filepath string) (string, err
 // Close closes the SFTP connection
 func (u *SFTPUploader) Close() error {
 	return u.client.Close()
-} 
+}

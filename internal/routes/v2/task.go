@@ -5,6 +5,11 @@ import (
 	"go-microservice/internal/types"
 )
 
+// Automatically register when this file is imported.
+func init() {
+	routeRegistry = append(routeRegistry, RegisterTaskRoutes)
+}
+
 // RegisterTaskRoutes registers all task-related routes
 func RegisterTaskRoutes() []types.Route {
 	taskController := controller.NewTaskController()

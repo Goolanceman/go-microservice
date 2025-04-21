@@ -1,0 +1,6 @@
+logs
+tmp
+vendor
+bin
+go.mod
+go.sum

@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"path"
+	"time"
+
+	"go-microservice/internal/config"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"go-microservice/internal/config"
 )
 
 // MinioUploader implements the Uploader interface for MinIO
@@ -96,4 +97,4 @@ func (u *MinioUploader) GetURL(ctx context.Context, filepath string) (string, er
 		return "", fmt.Errorf("failed to generate presigned URL: %w", err)
 	}
 	return url.String(), nil
-} 
+}

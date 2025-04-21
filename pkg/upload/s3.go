@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"path"
 
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"go-microservice/internal/config"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 // S3Uploader implements the Uploader interface for AWS S3
@@ -96,4 +98,4 @@ func (u *S3Uploader) Delete(ctx context.Context, filepath string) error {
 // GetURL implements the Uploader interface
 func (u *S3Uploader) GetURL(ctx context.Context, filepath string) (string, error) {
 	return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", u.bucket, u.region, filepath), nil
-} 
+}

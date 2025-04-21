@@ -4,15 +4,14 @@ import (
 	"go-microservice/internal/types"
 )
 
-// RegisterRoutes registers all v1 routes
+// Declare the shared registry slice.
+var routeRegistry []func() []types.Route
+
+// RegisterRoutes collects all registered v1 routes.
 func RegisterRoutes() []types.Route {
 	var routes []types.Route
-
-	// Register user routes
-	routes = append(routes, RegisterUserRoutes()...)
-
-	// Register product routes
-	routes = append(routes, RegisterProductRoutes()...)
-
+	for _, regFunc := range routeRegistry {
+		routes = append(routes, regFunc()...)
+	}
 	return routes
 }

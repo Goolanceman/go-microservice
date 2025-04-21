@@ -3,6 +3,7 @@
     "port": "8080",
     "environment": "dev",
     "log_level": "debug",
+    "log_file": "/Users/mansoor/Documents/movius/go-microservice/logs/combined.log",
     "allow_origins": "*",
     "sftp": {
       "host": "localhost",

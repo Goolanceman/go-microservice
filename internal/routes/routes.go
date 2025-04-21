@@ -3,16 +3,16 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 
-	"go-microservice/internal/routes/v1"
-	"go-microservice/internal/routes/v2"
+	v1 "go-microservice/internal/routes/v1"
+	v2 "go-microservice/internal/routes/v2"
 	"go-microservice/internal/types"
 )
 
 // RouteGroup represents a group of routes
 type RouteGroup struct {
-	Prefix    string
-	Handlers  []gin.HandlerFunc
-	Routes    []types.Route
+	Prefix   string
+	Handlers []gin.HandlerFunc
+	Routes   []types.Route
 }
 
 // RegisterRoutes registers all API routes

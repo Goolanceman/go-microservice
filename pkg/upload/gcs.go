@@ -4,19 +4,19 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
-	"path"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"go-microservice/internal/config"
+
+	"cloud.google.com/go/storage"
 	"google.golang.org/api/option"
 )
 
 // GCSUploader implements the Uploader interface for Google Cloud Storage
 type GCSUploader struct {
-	client *storage.Client
-	bucket *storage.BucketHandle
+	client     *storage.Client
+	bucket     *storage.BucketHandle
+	bucketName string
 }
 
 func init() {
@@ -30,7 +30,6 @@ func NewGCSUploader(cfg interface{}) (Uploader, error) {
 		return nil, ErrInvalidConfig
 	}
 
-	// Initialize GCS client
 	ctx := context.Background()
 	var client *storage.Client
 	var err error
@@ -52,8 +51,9 @@ func NewGCSUploader(cfg interface{}) (Uploader, error) {
 	}
 
 	return &GCSUploader{
-		client: client,
-		bucket: bucket,
+		client:     client,
+		bucket:     bucket,
+		bucketName: gcsCfg.Bucket,
 	}, nil
 }
 
@@ -75,10 +75,10 @@ func (u *GCSUploader) Upload(ctx context.Context, filepath string, content io.Re
 	opts := &storage.SignedURLOptions{
 		Scheme:  storage.SigningSchemeV4,
 		Method:  "GET",
-		Expires: time.Now().Add(24 * 7 * time.Hour),
+		Expires: time.Now().Add(7 * 24 * time.Hour),
 	}
 
-	url, err := obj.SignedURL(ctx, opts)
+	url, err := storage.SignedURL(u.bucketName, filepath, opts)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate signed URL: %w", err)
 	}
@@ -107,16 +107,15 @@ func (u *GCSUploader) Delete(ctx context.Context, filepath string) error {
 
 // GetURL implements the Uploader interface
 func (u *GCSUploader) GetURL(ctx context.Context, filepath string) (string, error) {
-	obj := u.bucket.Object(filepath)
 	opts := &storage.SignedURLOptions{
 		Scheme:  storage.SigningSchemeV4,
 		Method:  "GET",
-		Expires: time.Now().Add(24 * 7 * time.Hour),
+		Expires: time.Now().Add(7 * 24 * time.Hour),
 	}
 
-	url, err := obj.SignedURL(ctx, opts)
+	url, err := storage.SignedURL(u.bucketName, filepath, opts)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate signed URL: %w", err)
 	}
 	return url, nil
-} 
+}

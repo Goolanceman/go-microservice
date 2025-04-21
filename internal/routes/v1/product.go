@@ -5,6 +5,11 @@ import (
 	"go-microservice/internal/types"
 )
 
+// Automatically register when this file is imported.
+func init() {
+	routeRegistry = append(routeRegistry, RegisterProductRoutes)
+}
+
 // RegisterProductRoutes registers all product-related routes
 func RegisterProductRoutes() []types.Route {
 	productController := controller.NewProductController()

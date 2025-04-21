@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"go-microservice/internal/config"
-	"go-microservice/pkg/database"
+	database "go-microservice/pkg/cache"
 	"go-microservice/pkg/kafka"
 )
 
@@ -102,4 +102,4 @@ func (s *HealthService) CheckReadiness() map[string]string {
 	s.mu.RUnlock()
 
 	return status
-} 
+}
